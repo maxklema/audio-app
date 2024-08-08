@@ -1,10 +1,18 @@
 {
   "compilerOptions": {
-    "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library 
-    /* Modules */
-    "module": "commonjs",                                /* Specify what module code is generated. */
-    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 
-    /* Type Checking */
-    "strict": true,                                      /* Enable all strict type-checking options. */
-  }
+    "target": "ES6",
+    "module": "commonjs",
+    "outDir": "../dist",                  // Output directory for compiled files
+    "rootDir": ".",                      // Root directory of TypeScript files, relative to `tsconfig.json`
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "**/*.ts"                           // Include all TypeScript files in the current directory and subdirectories
+  ],
+  "exclude": [
+    "node_modules"                      // Exclude `node_modules` directory
+  ]
 }
