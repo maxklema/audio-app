@@ -1,6 +1,12 @@
 import * as dgram from 'dgram';
+import { MongoClient } from 'mongodb';
+import { StartDB, FetchDB } from './db';
 
-let udpVersion: dgram.SocketType = "udp4"
+const client: MongoClient = new MongoClient('mongodb://localhost:27017');
+
+let userData: any[]; // where we update user data from DB
+
+let udpVersion: dgram.SocketType = "udp6";
 const server: dgram.Socket = dgram.createSocket(udpVersion);
 
 server.on('error', (err: Error) => {
@@ -17,4 +23,15 @@ server.on('listening', () => {
   console.log(`server listening ${address.address}:${address.port}`);
 });
 
-server.bind(41234);
+async function main() {
+  StartDB(client);
+  userData = await FetchDB(client);
+  server.bind(41234); // start udp server
+  console.log(userData);
+}
+
+main();
+
+
+
+
