@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "ios": "react-native run-ios --simulator=\"iPhone 15 Pro\"",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "rm -rf ios/build/; kill $(lsof -t -i:8081); react-native run-ios",
     "test": "jest"
   },
   "dependencies": {
     "react": "18.2.0",
-    "react-native": "0.74.5"
+    "react-native": "^0.74.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
