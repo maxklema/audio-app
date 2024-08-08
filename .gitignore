@@ -7,10 +7,7 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 
-#Client
-
-
-
+/client/AudioAppLM
 
 #Server
 /server/node_modules
