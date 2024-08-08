@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "bonjour": "^3.3.0",
+    "dgram": "^1.0.1",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
