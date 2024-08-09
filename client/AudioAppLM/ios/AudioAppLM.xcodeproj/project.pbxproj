@@ -12,7 +12,7 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		244302E52C6563BF00604A7E /* RCTCalenderModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 244302E42C6563BF00604A7E /* RCTCalenderModule.m */; };
+		244118ED2C666FC000D6F681 /* RCTCalendarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 244118EC2C666FC000D6F681 /* RCTCalendarModule.m */; };
 		48F774D642EFB178121FD59A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6561BA15041D571A363325EB /* PrivacyInfo.xcprivacy */; };
 		7699B88040F8A987B510C191 /* libPods-AudioAppLM-AudioAppLMTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-AudioAppLM-AudioAppLMTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
@@ -40,8 +40,8 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AudioAppLM/main.m; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = AudioAppLM/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		19F6CBCC0A4E27FBF8BF4A61 /* libPods-AudioAppLM-AudioAppLMTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AudioAppLM-AudioAppLMTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		244302E32C6562C700604A7E /* RTCCalenderModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RTCCalenderModule.h; sourceTree = "<group>"; };
-		244302E42C6563BF00604A7E /* RCTCalenderModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTCalenderModule.m; sourceTree = "<group>"; };
+		2429165A2C666D5300CDD340 /* RCTCalendarModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTCalendarModule.h; sourceTree = "<group>"; };
+		244118EC2C666FC000D6F681 /* RCTCalendarModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCTCalendarModule.m; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-AudioAppLM.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioAppLM.debug.xcconfig"; path = "Target Support Files/Pods-AudioAppLM/Pods-AudioAppLM.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-AudioAppLM.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioAppLM.release.xcconfig"; path = "Target Support Files/Pods-AudioAppLM/Pods-AudioAppLM.release.xcconfig"; sourceTree = "<group>"; };
 		5B7EB9410499542E8C5724F5 /* Pods-AudioAppLM-AudioAppLMTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AudioAppLM-AudioAppLMTests.debug.xcconfig"; path = "Target Support Files/Pods-AudioAppLM-AudioAppLMTests/Pods-AudioAppLM-AudioAppLMTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -100,8 +100,8 @@
 				13B07FB71A68108700A75B9A /* main.m */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
 				6561BA15041D571A363325EB /* PrivacyInfo.xcprivacy */,
-				244302E32C6562C700604A7E /* RTCCalenderModule.h */,
-				244302E42C6563BF00604A7E /* RCTCalenderModule.m */,
+				2429165A2C666D5300CDD340 /* RCTCalendarModule.h */,
+				244118EC2C666FC000D6F681 /* RCTCalendarModule.m */,
 			);
 			name = AudioAppLM;
 			sourceTree = "<group>";
@@ -403,7 +403,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				244302E52C6563BF00604A7E /* RCTCalenderModule.m in Sources */,
+				244118ED2C666FC000D6F681 /* RCTCalendarModule.m in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 			);

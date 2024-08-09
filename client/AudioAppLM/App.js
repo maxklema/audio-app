@@ -1,13 +1,13 @@
 import React from 'react';
 import {View, Text, StyleSheet, Button} from 'react-native';
 import {NativeModules} from 'react-native';
-const {CalenderModule} = NativeModules;
+const {CalendarModule} = NativeModules;
 
 const App = () => {
   const onPress = () => {
-    // CalenderModule.createCalendarEvent('testName', 'testLocation');
-    const moduleNames = Object.keys(NativeModules);
-    console.log(moduleNames);
+    CalendarModule.createCalendarEvent('testName', 'testLocation');
+    // const moduleNames = Object.keys(NativeModules);
+    // console.log(moduleNames);
   };
 
   return (
