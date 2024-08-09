@@ -14,6 +14,6 @@ export default function SetUpUDP(server: dgram.Socket): void {
   
   server.on('listening', () => {
     const address: dgram.BindOptions = server.address();
-    console.log(`server listening ${address.address}:${address.port}`);
+    console.log(`UDP server listening ${address.address}:${address.port}`);
   });
 }

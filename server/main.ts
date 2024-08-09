@@ -1,51 +1,42 @@
 import * as dgram from 'dgram';
-import express from 'express';
-import router from './api'
+import * as net from "net";
 import SetUpUDP from './udp';
+import HandleTCP from './tcp';
 
 
+let rooms: Map<string, string> = new Map<string, string>();
+// map contains name of room as key, multicast ip as value.
+// used to iterate over to send udp audio to each room
 
-type RoomInfo = { // what each room maps to
-  users: Set<string>;
-  multicastAddress: string;
-};
+export interface RoomContent {
+  [room: string]: string[];
+} // object with names of rooms as keys and arrays of users in them
+// Used to send call info to each user over tcp
 
-let rooms: Map<string, RoomInfo> = new Map<string, RoomInfo>();
-// map contains rooms(multicast groups) with each having a set of user IPs.
+let userRooms: RoomContent = {"general": [] };
+// will need to initialize from overhead server
 
-const api = express();
-const APIport: number = 3001;
-api.use(express.json());
-api.use(router); // get api routes.
 
-let udpVersion: dgram.SocketType = "udp4"
+let udpVersion: dgram.SocketType = "udp4";
 const server: dgram.Socket = dgram.createSocket(udpVersion);
 SetUpUDP(server); // get event handlers for UDP server
-
 
 // NOTE:
 // When setting up a server, will need to fetch prior room data for host.
 // This will have to be stored on a server/cloud database on it's own.
-server.bind(3000);
-api.listen(APIport, () => {
-  console.log(`API is running at http://localhost:${APIport}`);
+
+let allSockets: net.Socket[] = [];
+// store all connections of sockets.
+
+const tcpServer: net.Server = net.createServer((socket: net.Socket) => {
+  allSockets.push(socket); // each connection, push to array
+  HandleTCP(socket, allSockets, rooms, userRooms); // set up handlers for each socket
 });
 
-export function CreateRoom(room: string, user: string): boolean {
-  if (rooms.has(room)) return false;
-  rooms.set(room, {
-    users: new Set<string>([user]),
-    multicastAddress: "" // generate and return
-  }); // create new room and add user to it.
-  console.log(rooms);
-  return true;
-}
+tcpServer.listen(3001, () => {
+  console.log('opened TCP server on', tcpServer.address());
+}); 
 
-export function JoinRoom(room: string, user: string): boolean {
-  if (rooms.has(room)) {
-    rooms.get(room)?.users.add(user);
-    return true;
-  } else {
-    return false;
-  }
-}
+server.bind(3000); // start UDP server
+
+
