@@ -1,5 +1,6 @@
 import * as net from "net";
 import { RoomContent } from './main';
+import { v4 as uuidv4 } from 'uuid';
 
 
 
@@ -23,15 +24,15 @@ export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], 
         BroadcastRooms(allSockets, userRooms);
         break;
       case 'leaveCall':
-        LeaveCall(message, senderIP, userRooms, users);
+        LeaveCall(message, senderIP, userRooms, users, general);
         BroadcastRooms(allSockets, userRooms);
         break; // remove user from the room they were in
       case 'createRoom':
-        CreateRoom(message, senderIP, rooms, userRooms, users);
+        CreateRoom(message, senderIP, rooms, userRooms, users, general);
         BroadcastRooms(allSockets, userRooms);
         break;
       case 'joinRoom':
-        JoinRoom(message, senderIP, userRooms, users);
+        JoinRoom(message, senderIP, userRooms, users, general);
         BroadcastRooms(allSockets, userRooms);
         break;
       case 'leaveRoom':
@@ -55,30 +56,34 @@ function JoinCall(message: Message, userIP: string, userRooms: RoomContent, user
   general.add(userIP);
 }
 
-function LeaveCall( message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>) {
+function LeaveCall( message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   if (message.room) {
     userRooms[message.room] = userRooms[message.room].filter(user => user !== message.user);
     users.delete(userIP);
+    general.delete(userIP);
   } else {
     console.log("No room provided on leaveCall request")
   }
 }
 
-function CreateRoom(message: Message, userIP: string, rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>) {
+function CreateRoom(message: Message, userIP: string, rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   if (message.room) {
+    uuidv4();
     let newIP: string = ""; // Need to write code for generating multicast IP
     rooms.set(message.room, newIP);
     if (!userRooms[message.room]) {
       userRooms[message.room] = [message.user]; // make a new room with only user in it.
-    } else console.error("Already a room with that name")
+    } else console.error("Already a room with that name");
+    general.delete(userIP);
     users.set(userIP, message.room);
   } 
 }
 
-function JoinRoom(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>) {
+function JoinRoom(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   if (message.room) {
     userRooms[message.room].push(message.user);
     users.set(userIP, message.room)
+    general.delete(userIP);
   } else {
     console.log("No room provided on joinRoom request")
   }
