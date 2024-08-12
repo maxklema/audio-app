@@ -14,54 +14,58 @@ class AudioRecorder: NSObject, RCTBridgeModule {
 
   @objc
   func startRecording() {
+  
     let fileManager: FileManager = FileManager.default
     let tempDirectory: URL = fileManager.temporaryDirectory
     fileURL = tempDirectory.appendingPathComponent("audio.m4a")
 
     let settings: [String: Any] = [
       AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-      AVSampleRateKey: 96000,
+      AVSampleRateKey: 48000.0,
       AVNumberOfChannelsKey: 1,
-      AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue
+      AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
     ]
 
     do {
+      try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .mixWithOthers, .allowBluetooth])
+      try AVAudioSession.sharedInstance().setActive(true)
+
       recorder = try AVAudioRecorder(url: fileURL!, settings: settings)
       recorder?.record()
-
-      //Prepare playback
-      
-      player = try AVAudioPlayer(contentsOf: fileURL!)
-      player?.prepareToPlay()
-      player?.play()
 
     } catch {
       print("Failed to start recording: \(error.localizedDescription)")
     }
-
   }
   
   @objc
   func playAudio() {
+
     let fileManager: FileManager = FileManager.default
     let tempDirectory: URL = fileManager.temporaryDirectory
-    let fileURL = tempDirectory.appendingPathComponent("audio.m4a");
+    let fileURL: URL = tempDirectory.appendingPathComponent("audio.m4a");
     
     do {
       player = try AVAudioPlayer(contentsOf: fileURL)
       player?.prepareToPlay()
+      player?.isMeteringEnabled = true
+      player?.volume = 0.5
       player?.play()
-      print("Playback started")
+      
     } catch {
       print("Error playing audio: \(error.self)")
     }
+  }
+  
+  @objc 
+  func toggleVolume(_ playerVolume: Float) {
+      print(playerVolume)
+      player?.volume = playerVolume
   }
 
   @objc
   func stopRecording() {
     recorder?.stop()
-    player?.stop()
   }
 
 }
-

@@ -5,4 +5,5 @@
   RCT_EXTERN_METHOD(startRecording)
   RCT_EXTERN_METHOD(stopRecording)
   RCT_EXTERN_METHOD(playAudio)
+  RCT_EXTERN_METHOD(toggleVolume:(float)playerVolume)
 @end

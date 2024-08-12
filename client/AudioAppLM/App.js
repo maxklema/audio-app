@@ -1,11 +1,13 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules} from 'react-native';
+import {Slider} from '@rneui/themed';
 const {AudioRecorder} = NativeModules;
 
 const App = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingText, setIsRecordingText] = useState('Record');
+  const [volume, setVolume] = useState(0.3);
 
   const startRecording = () => {
     AudioRecorder.startRecording();
@@ -21,6 +23,11 @@ const App = () => {
 
   const playAudio = () => {
     AudioRecorder.playAudio();
+  };
+
+  const toggleVolume = audioVolume => {
+    setVolume(audioVolume);
+    AudioRecorder.toggleVolume(audioVolume);
   };
 
   return (
@@ -39,6 +46,16 @@ const App = () => {
       <Pressable style={styles.recording} onPress={playAudio}>
         <Text style={styles.recordText}>Play Recording</Text>
       </Pressable>
+      <Slider
+        value={volume}
+        onValueChange={value => toggleVolume(value)}
+        maximumValue={1.0}
+        minimumValue={0.0}
+        step={0.01}
+        allowTouchTrack
+        trackStyle={{ height: 5, width: 200, backgroundColor: 'red' }}
+        thumbStyle={{ height: 20, width: 20, backgroundColor: 'red' }}
+      />
     </View>
   );
 };
@@ -48,7 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: 'white',
   },
   notRecording: {
     backgroundColor: 'blue',
@@ -80,6 +97,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
+  },
+  slider: {
+    marginTop: 100,
+    width: 200,
   },
 });
 
