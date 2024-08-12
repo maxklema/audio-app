@@ -1,7 +1,9 @@
 import dgram from 'dgram';
 
 
-export default function SetUpUDP(server: dgram.Socket): void {
+
+
+export default function HandleUDP(server: dgram.Socket, rooms: Map<string, string>): void {
   
   server.on('error', (err: Error) => { // udp
     console.error(`server error:\n${err.stack}`);
@@ -10,6 +12,8 @@ export default function SetUpUDP(server: dgram.Socket): void {
   
   server.on('message', (msg: Buffer, rinfo: dgram.RemoteInfo) => {
     console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+
+   
   });
   
   server.on('listening', () => {
