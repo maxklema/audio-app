@@ -20,10 +20,12 @@ export interface RoomContent {
 let userRooms: RoomContent = {"general": [] };
 // will need to initialize from overhead server
 
+let general: Set<string> = new Set();
+// array of all users IP that are in general.
 
 let udpVersion: dgram.SocketType = "udp4";
 const server: dgram.Socket = dgram.createSocket(udpVersion);
-HandleUDP(server, rooms); // get event handlers for UDP server
+HandleUDP(server, rooms, users, general); // get event handlers for UDP server
 
 // NOTE:
 // When setting up a server, will need to fetch prior room data for host.
@@ -34,7 +36,7 @@ let allSockets: net.Socket[] = [];
 
 const tcpServer: net.Server = net.createServer((socket: net.Socket) => {
   allSockets.push(socket); // each connection, push to array
-  HandleTCP(socket, allSockets, rooms, userRooms, users); // set up handlers for each socket
+  HandleTCP(socket, allSockets, rooms, userRooms, users, general); // set up handlers for each socket
 });
 
 tcpServer.listen(3001, () => {

@@ -9,7 +9,7 @@ interface Message {
   room?: string; // dont need room for joinCall
 }
 
-export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>) {
+export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   socket.on('data', (data) => {
     const message: Message = JSON.parse(data.toString());
     const senderIP: string | undefined = socket.remoteAddress; // grab IP of sender
@@ -19,7 +19,7 @@ export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], 
     }
     switch (message.type) {
       case 'joinCall':
-        JoinCall(message, senderIP, userRooms, users);
+        JoinCall(message, senderIP, userRooms, users, general);
         BroadcastRooms(allSockets, userRooms);
         break;
       case 'leaveCall':
@@ -35,7 +35,7 @@ export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], 
         BroadcastRooms(allSockets, userRooms);
         break;
       case 'leaveRoom':
-        LeaveRoom(message, senderIP, userRooms, users);
+        LeaveRoom(message, senderIP, userRooms, users, general);
         BroadcastRooms(allSockets, userRooms);
         break;
     } // Note: will need to incorporate some success/failure responses to send to User.
@@ -49,9 +49,10 @@ function BroadcastRooms(allSockets: net.Socket[], userRooms: RoomContent) {
   }) // write current rooms/users to all clients
 }
 
-function JoinCall(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>) {
+function JoinCall(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   userRooms["general"].push(message.user); // push user to general multicast group
   users.set(userIP, "general");
+  general.add(userIP);
 }
 
 function LeaveCall( message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>) {
@@ -84,10 +85,15 @@ function JoinRoom(message: Message, userIP: string, userRooms: RoomContent, user
 }
 
 
-function LeaveRoom(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>) {
+function LeaveRoom(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   if (message.room) {
     userRooms[message.room] = userRooms[message.room].filter(user => user !== message.user);
-    users.set(userIP, "general");
+    if (message.room === "general") { // leaving general to join another group
+      general.delete(userIP);
+    } else { // rejoin general if leaving a multicast group
+      users.set(userIP, "general");
+      general.add(userIP);
+    }
   } else {
     console.log("No room provided in joinRoom request.")
   }
