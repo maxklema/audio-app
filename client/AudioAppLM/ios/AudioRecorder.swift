@@ -12,7 +12,7 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   private var inputNode: AVAudioInputNode!
   private var outputNode: AVAudioOutputNode!
   private var playerNode: AVAudioPlayerNode!
-  private var sampleRate: Double = 48000.0 //44.1 kHz
+  private var sampleRate: Double! //kHz
   private var channels: UInt32 = 1
   
   @objc
@@ -23,6 +23,18 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     outputNode = audioEngine.outputNode
     playerNode = AVAudioPlayerNode()
   
+    //configure AVAudioSession for playback
+    let audioSession = AVAudioSession.sharedInstance()
+    do {
+      try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
+      try audioSession.setActive(true)
+      
+      sampleRate = audioSession.sampleRate
+      
+    } catch {
+      print("Failed to set up AVAudioSession: \(error.localizedDescription)")
+    }
+    
     let format = AVAudioFormat(
       commonFormat: .pcmFormatFloat32,
       sampleRate: sampleRate,
@@ -31,6 +43,7 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     )
     
     audioEngine.attach(playerNode)
+    audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: format)
     
     //Allows you to receive audio data from the node for processing or inspection
     // The block gets executed everytime a new audio buffer is available
@@ -44,8 +57,6 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   func start() {
     do {
       try audioEngine.start()
-      
-      playerNode.play()
     } catch {
       print("Error starting audio engine: \(error.localizedDescription)")
     }
@@ -53,27 +64,24 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   
   @objc
   func stop() {
-    audioEngine.stop()
+    playerNode.stop()
+//    audioEngine.stop()
   }
   
   private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-    //process audio buffer or stream it
-      
-    let format = buffer.format
+  
+    let delay: TimeInterval = 3.0 // Wait for 5 seconds
     
-    audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: format)
-//    let channelData = buffer.floatChannelData //creates a pointer to an array of floats
-//    let audioDataPointer = channelData?.pointee
-//    let frameCount = Int(buffer.frameLength)
+    playerNode.scheduleBuffer(buffer, at: nil, completionHandler: nil)
     
-    playerNode.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
-    
-//    duration += Double(frameCount) / sampleRate
-//    print("DURATION: ", duration)
-//    
-////    for i in 0..<min(frameCount, 100) {
-////      print(audioDataPointer![i])
-////    }
+    // Start playback
+    // Delay playback
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        if !self.playerNode.isPlaying {
+            print("is playing!")
+            self.playerNode.play()
+        }
+    }
     
   }
 
