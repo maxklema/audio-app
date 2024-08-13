@@ -9,3 +9,4 @@ DerivedData/
 
 #Server
 /server/node_modules
+/server/tests.ts

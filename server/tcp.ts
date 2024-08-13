@@ -2,8 +2,6 @@ import * as net from "net";
 import { RoomContent } from './main';
 import { v4 as uuidv4 } from 'uuid';
 
-
-
 interface Message {
   type: 'leaveRoom' | 'joinRoom' | 'createRoom' | 'joinCall' | 'leaveCall';
   user: string;
@@ -89,7 +87,6 @@ function JoinRoom(message: Message, userIP: string, userRooms: RoomContent, user
   }
 }
 
-
 function LeaveRoom(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   if (message.room) {
     userRooms[message.room] = userRooms[message.room].filter(user => user !== message.user);
@@ -103,4 +100,3 @@ function LeaveRoom(message: Message, userIP: string, userRooms: RoomContent, use
     console.log("No room provided in joinRoom request.")
   }
 }
-

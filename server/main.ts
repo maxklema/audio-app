@@ -23,7 +23,7 @@ let userRooms: RoomContent = {"general": [] };
 let general: Set<string> = new Set();
 // array of all users IP that are in general.
 
-let udpVersion: dgram.SocketType = "udp4";
+let udpVersion: dgram.SocketType = "udp6";
 const server: dgram.Socket = dgram.createSocket(udpVersion);
 HandleUDP(server, rooms, users, general); // get event handlers for UDP server
 
@@ -44,5 +44,4 @@ tcpServer.listen(3001, () => {
 }); 
 
 server.bind(3000); // start UDP server
-
 
