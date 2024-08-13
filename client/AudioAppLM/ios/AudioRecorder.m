@@ -2,8 +2,7 @@
 #import "React/RCTBridgeModule.h"
 
 @interface RCT_EXTERN_MODULE(AudioRecorder, NSObject)
-  RCT_EXTERN_METHOD(startRecording)
-  RCT_EXTERN_METHOD(stopRecording)
-  RCT_EXTERN_METHOD(playAudio)
-  RCT_EXTERN_METHOD(toggleVolume:(float)playerVolume)
+  RCT_EXTERN_METHOD(start)
+  RCT_EXTERN_METHOD(stop)
+  RCT_EXTERN_METHOD(init)
 @end

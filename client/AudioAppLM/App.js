@@ -10,24 +10,24 @@ const App = () => {
   const [volume, setVolume] = useState(0.3);
 
   const startRecording = () => {
-    AudioRecorder.startRecording();
+    AudioRecorder.start();
     setIsRecording(true);
     setIsRecordingText('Recording');
   };
 
   const stopRecording = () => {
-    AudioRecorder.stopRecording();
+    AudioRecorder.stop();
     setIsRecording(false);
     setIsRecordingText('Record');
   };
 
   const playAudio = () => {
-    AudioRecorder.playAudio();
+    // AudioRecorder.playAudio();
   };
 
   const toggleVolume = audioVolume => {
     setVolume(audioVolume);
-    AudioRecorder.toggleVolume(audioVolume);
+    // AudioRecorder.toggleVolume(audioVolume);
   };
 
   return (
@@ -53,8 +53,8 @@ const App = () => {
         minimumValue={0.0}
         step={0.01}
         allowTouchTrack
-        trackStyle={{ height: 5, width: 200, backgroundColor: 'red' }}
-        thumbStyle={{ height: 20, width: 20, backgroundColor: 'red' }}
+        trackStyle={{height: 5, width: 200, backgroundColor: 'red'}}
+        thumbStyle={{height: 20, width: 20, backgroundColor: 'red'}}
       />
     </View>
   );
