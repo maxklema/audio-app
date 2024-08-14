@@ -6,7 +6,11 @@ import HandleTCP from './tcp';
 
 let rooms: Map<string, string> = new Map<string, string>();
 // map contains name of room as key, multicast ip as value.
-// used to iterate over to send udp audio to each room
+// used to iterate over to send udp audio to each room.
+
+let multicastIPs: Set<string> = new Set<string>();
+// set of all multicast ips currently in use.
+// using Administratively scoped scoped addresses, 239.0.0.0 to 239.255.255.255.
 
 let users: Map<string, string> = new Map<string, string>();
 // map with user's IP as key and group as value.
@@ -23,7 +27,7 @@ let userRooms: RoomContent = {"general": [] };
 let general: Set<string> = new Set();
 // array of all users IP that are in general.
 
-let udpVersion: dgram.SocketType = "udp6";
+let udpVersion: dgram.SocketType = "udp4";
 const server: dgram.Socket = dgram.createSocket(udpVersion);
 HandleUDP(server, rooms, users, general); // get event handlers for UDP server
 
@@ -36,12 +40,14 @@ let allSockets: net.Socket[] = [];
 
 const tcpServer: net.Server = net.createServer((socket: net.Socket) => {
   allSockets.push(socket); // each connection, push to array
-  HandleTCP(socket, allSockets, rooms, userRooms, users, general); // set up handlers for each socket
+  HandleTCP(socket, allSockets, rooms, userRooms, users, general, multicastIPs); // set up handlers for each socket
 });
 
-tcpServer.listen(3001, () => {
+tcpServer.listen(3001, '0.0.0.0', () => {
   console.log('opened TCP server on', tcpServer.address());
 }); 
 
 server.bind(3000); // start UDP server
+
+
 

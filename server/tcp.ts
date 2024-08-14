@@ -1,14 +1,14 @@
 import * as net from "net";
 import { RoomContent } from './main';
-import { v4 as uuidv4 } from 'uuid';
+import generateIP from "./ipv4";
 
 interface Message {
   type: 'leaveRoom' | 'joinRoom' | 'createRoom' | 'joinCall' | 'leaveCall';
   user: string;
-  room?: string; // dont need room for joinCall
+  room?: string; // don't need room for joinCall
 }
 
-export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
+export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>, multicastIPs: Set<string>) {
   socket.on('data', (data) => {
     const message: Message = JSON.parse(data.toString());
     const senderIP: string | undefined = socket.remoteAddress; // grab IP of sender
@@ -26,7 +26,7 @@ export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], 
         BroadcastRooms(allSockets, userRooms);
         break; // remove user from the room they were in
       case 'createRoom':
-        CreateRoom(message, senderIP, rooms, userRooms, users, general);
+        CreateRoom(message, senderIP, rooms, userRooms, users, general, multicastIPs);
         BroadcastRooms(allSockets, userRooms);
         break;
       case 'joinRoom':
@@ -64,10 +64,9 @@ function LeaveCall( message: Message, userIP: string, userRooms: RoomContent, us
   }
 }
 
-function CreateRoom(message: Message, userIP: string, rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
+function CreateRoom(message: Message, userIP: string, rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>, multicastIPs: Set<string>) {
   if (message.room) {
-    uuidv4();
-    let newIP: string = ""; // Need to write code for generating multicast IP
+    let newIP: string = generateIP(multicastIPs); // Need to write code for generating multicast IP
     rooms.set(message.room, newIP);
     if (!userRooms[message.room]) {
       userRooms[message.room] = [message.user]; // make a new room with only user in it.
