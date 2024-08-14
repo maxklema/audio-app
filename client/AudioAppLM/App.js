@@ -1,7 +1,9 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules} from 'react-native';
 import {Slider} from '@rneui/themed';
+import dgram from 'react-native-udp';
+
 const {AudioRecorder} = NativeModules;
 
 const App = () => {
@@ -9,8 +11,48 @@ const App = () => {
   const [recordingText, setIsRecordingText] = useState('Record');
   const [volume, setVolume] = useState(0.3);
 
+  const client = dgram.createSocket('udp4');
+
+
+  const ipAddress = '10.3.196.53';
+  const dataToSend = {
+    data: 'test data 123',
+  };
+
+  // client.send(
+  //   JSON.stringify(dataToSend),
+  //   undefined,
+  //   undefined,
+  //   3000,
+  //   ipAddress,
+  //   err => {
+  //     if (err) {
+  //       console.error('error sending data', err);
+  //     } else {
+  //       console.log('data sent successfully!');
+  //     }
+  //   },
+  // );
+
+  client.on('message', function (msg, rinfo) {
+    console.log('New Message', msg.toString(), rinfo);
+  });
+
+  client.on('listening', () => {
+    client.addMembership('239.99.211.90');
+  });
+
+  client.bind(8081);
+
   const startRecording = () => {
-    AudioRecorder.start();
+    console.log('HERE!!!');
+    AudioRecorder.start()
+      .then(data => {
+        console.log(data.length);
+      })
+      .catch(error => {
+        console.error('Error', error);
+      });
     setIsRecording(true);
     setIsRecordingText('Recording');
   };
@@ -22,7 +64,7 @@ const App = () => {
   };
 
   const playAudio = () => {
-    AudioRecorder.play();
+    //nothing
   };
 
   const toggleVolume = audioVolume => {

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios --port=8081",
+    "ios": "react-native run-ios --simulator=\"iPhone 15 Pro\"",
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest"
@@ -13,7 +13,8 @@
     "@miblanchard/react-native-slider": "^2.6.0",
     "@rneui/themed": "^4.0.0-rc.8",
     "react": "18.2.0",
-    "react-native": "^0.74.5"
+    "react-native": "^0.74.5",
+    "react-native-udp": "^4.1.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -43,19 +43,38 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     
     audioEngine.attach(playerNode)
     audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: format)
-    
-    // The block gets executed everytime a new audio buffer is available
-    inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] (buffer, when) in
-        self?.processAudioBuffer(buffer)
-    }
+  
   }
   
-  @objc
-  func start() {
+  @objc(start:rejecter:)
+  func start(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     do {
       try audioEngine.start()
+      
+      let format = AVAudioFormat(
+        commonFormat: .pcmFormatFloat32,
+        sampleRate: sampleRate,
+        channels: channels,
+        interleaved: false
+      )
+      
+      var data : [UInt8]!
+      
+      // The block gets executed everytime a new audio buffer is available
+      inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] (buffer, when) in
+        do {
+          data = try (self?.processAudioBuffer(buffer))
+          resolve(data)
+          self?.audioEngine.stop()
+        } catch {
+          print("Error recieving audio data")
+          reject("ERROR", "Error receiving audio data", error)
+        }
+      }
+      
     } catch {
       print("Error starting audio engine: \(error.localizedDescription)")
+      reject("ERROR", "Error starting audio engine", error)
     }
   }
   
@@ -65,7 +84,7 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     audioEngine.stop()
   }
 
-  private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+  private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) throws -> [UInt8] {
   
     let bufferSize = Int(buffer.frameLength)
     
@@ -83,20 +102,25 @@ class AudioRecorder: NSObject, RCTBridgeModule {
      
       bytes = Array(bytes.prefix(output))
       
-      playAudio(rawData: bytes)
+      return bytes
       
     } catch {
       print("Error encoding data: \(error.localizedDescription)")
+      return []
     }
   }
   
   @objc
   func playAudio(rawData: [UInt8]) {
         
-    // start the audio engine
-    if !audioEngine.isRunning {
-      start()
-    }
+//    // start the audio engine
+//    if !audioEngine.isRunning {
+//      do {
+//        start(, reject: <#T##RCTPromiseRejectBlock##RCTPromiseRejectBlock##(String?, String?, (any Error)?) -> Void#>)
+//      } catch {
+//        //nothing
+//      }
+//    }
     
     let opusFormat = AVAudioFormat(
       commonFormat: .pcmFormatFloat32,
