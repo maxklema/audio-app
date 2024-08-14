@@ -22,7 +22,7 @@ const App = () => {
   };
 
   const playAudio = () => {
-    // AudioRecorder.playAudio();
+    AudioRecorder.play();
   };
 
   const toggleVolume = audioVolume => {

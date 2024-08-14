@@ -1,6 +1,7 @@
 import Foundation
 import AVFoundation
 import React
+import Opus
 
 @objc(AudioRecorder)
 class AudioRecorder: NSObject, RCTBridgeModule {
@@ -10,8 +11,11 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   
   private var audioEngine: AVAudioEngine!
   private var inputNode: AVAudioInputNode!
-  private var outputNode: AVAudioOutputNode!
   private var playerNode: AVAudioPlayerNode!
+  
+  private var masterBuffer: AVAudioPCMBuffer! //stores all audio for playback. Just for testing.
+  private var bufferData: [Float] = []
+  
   private var sampleRate: Double! //kHz
   private var channels: UInt32 = 1
   
@@ -20,7 +24,6 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     super.init()
     audioEngine = AVAudioEngine()
     inputNode = audioEngine.inputNode
-    outputNode = audioEngine.outputNode
     playerNode = AVAudioPlayerNode()
   
     //configure AVAudioSession for playback
@@ -56,6 +59,7 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   @objc
   func start() {
     do {
+      resetBuffer();
       try audioEngine.start()
     } catch {
       print("Error starting audio engine: \(error.localizedDescription)")
@@ -65,26 +69,96 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   @objc
   func stop() {
     playerNode.stop()
-//    audioEngine.stop()
+    audioEngine.stop()
+  }
+  
+  @objc
+  func play() {
+    do {
+      try audioEngine.start()
+      playerNode.scheduleBuffer(masterBuffer, at: nil, completionHandler: nil)
+      self.playerNode.play()
+      
+    } catch {
+      print("Error Playing Audio from Buffer: \(error.localizedDescription)")
+    }
   }
   
   private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
   
-    let delay: TimeInterval = 3.0 // Wait for 5 seconds
+    let bufferSize = Int(buffer.frameLength)
+    let newData = [Float](UnsafeBufferPointer(start: buffer.floatChannelData?[0], count: bufferSize))
     
-    playerNode.scheduleBuffer(buffer, at: nil, completionHandler: nil)
+    //apend new buffer data to master buffer
     
-    // Start playback
-    // Delay playback
-    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-        if !self.playerNode.isPlaying {
-            print("is playing!")
-            self.playerNode.play()
+    bufferData.append(contentsOf: newData)
+    
+    let masterFormat = AVAudioFormat(
+      commonFormat: .pcmFormatFloat32,
+      sampleRate: sampleRate,
+      channels: channels,
+      interleaved: false
+    )
+    
+    //initializing a master buffer
+    if masterBuffer == nil {
+      masterBuffer = AVAudioPCMBuffer(pcmFormat: masterFormat!, frameCapacity: AVAudioFrameCount(bufferData.count))
+      masterBuffer?.frameLength = AVAudioFrameCount(bufferData.count)
+      
+      if let masterPointer = masterBuffer?.floatChannelData?[0] {
+        memcpy(masterPointer, newData, bufferSize * MemoryLayout<Float>.size)
+      }
+    } else {
+      
+      // Update masterBuffer frame length
+      let oldFrameLength = masterBuffer!.frameLength
+      let newFrameLength = AVAudioFrameCount(bufferData.count)
+      
+      //check if master buffer needs resizing
+      if newFrameLength > masterBuffer!.frameCapacity {
+        
+        let newCapacity = max(newFrameLength, masterBuffer!.frameCapacity * 2)
+        let newMasterBuffer = AVAudioPCMBuffer(pcmFormat: masterFormat!, frameCapacity: newCapacity)
+        newMasterBuffer!.frameLength = newFrameLength
+        
+        //copy existing data
+        if let oldPointer = masterBuffer?.floatChannelData?[0], let newPointer = newMasterBuffer?.floatChannelData?[0] {
+            memcpy(newPointer, oldPointer, Int(oldFrameLength) * MemoryLayout<Float>.size)
         }
+        
+        //copy new data
+        if let newPointer = newMasterBuffer?.floatChannelData?[0] {
+          memcpy(newPointer + Int(oldFrameLength), newData, bufferSize * MemoryLayout<Float>.size)
+        }
+        
+        masterBuffer = newMasterBuffer
+      
+      } else {
+        
+        //directly append data if no re-sizing needed
+        if let masterPointer = masterBuffer?.floatChannelData?[0] {
+          let oldPointer = masterPointer  + Int(oldFrameLength)
+          memcpy(oldPointer, newData, bufferSize * MemoryLayout<Float>.size)
+        }
+        
+        masterBuffer?.frameLength = newFrameLength
+        
+      }
+      
     }
     
   }
-
   
+  //clears the buffer
+  private func resetBuffer() {
+    bufferData = []
+    masterBuffer?.frameLength = 0
+    
+    if let masterPointer = masterBuffer?.floatChannelData?[0] {
+      let bufferSize = Int(masterBuffer!.frameCapacity)
+      memset(masterPointer, 0, bufferSize * MemoryLayout<Float>.size)
+    }
+    
+  }
 
 }
