@@ -47,7 +47,5 @@ tcpServer.listen(3001, '0.0.0.0', () => {
   console.log('opened TCP server on', tcpServer.address());
 }); 
 
-server.bind(3000); // start UDP server
-
-
+server.bind(3001, () => {}); // start UDP server
 

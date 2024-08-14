@@ -36,9 +36,9 @@ const server = dgram.createSocket(udpVersion);
 //   console.log("sent")
 // });  
 // server.bind(3005)
-// server.on("listening", () => {
-//   server.addMembership("ff05::ff49:0929:f5db:2c12", "::%en0");
-// })
-// server.on('message', (message: Buffer, rinfo: dgram.RemoteInfo) => {
-//   console.log(message)
-// })
+server.on("listening", () => {
+    server.addMembership("ff05::ff49:0929:f5db:2c12", "::%en0");
+});
+server.on('message', (message, rinfo) => {
+    console.log(message);
+});

@@ -58,4 +58,3 @@ tcpServer.listen(3001, '0.0.0.0', () => {
     console.log('opened TCP server on', tcpServer.address());
 });
 server.bind(3000); // start UDP server
-server.send("hello", 3005, "ff0e::ff49:0929:f5db:2c12%en0", () => console.log("Sent"));
