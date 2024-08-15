@@ -13,8 +13,6 @@ class AudioRecorder: RCTEventEmitter {
   private var sampleRate: Double! //kHz
   private var channels: UInt32 = 1
   
-  private var emitter : AudioRecorderEmitter?
-  
   override static func moduleName() -> String {
     return "AudioRecorder"
   }
@@ -144,3 +142,4 @@ class AudioRecorder: RCTEventEmitter {
     sendEvent(withName: "opusAudio", body: ["buffer": opusAudio])
   }
 }
+

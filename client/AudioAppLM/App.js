@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
-import {NativeModules} from 'react-native';
+import {NativeModules, NativeEventEmitter} from 'react-native';
 import {Slider} from '@rneui/themed';
 import dgram from 'react-native-udp';
 
 const {AudioRecorder} = NativeModules;
+const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
 
 const App = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -12,49 +13,40 @@ const App = () => {
   const [volume, setVolume] = useState(0.3);
 
   const client = dgram.createSocket('udp4');
-
-
+  client.bind(8081);
   const ipAddress = '10.3.196.53';
-  const dataToSend = {
-    data: 'test data 123',
-  };
-
-  // client.send(
-  //   JSON.stringify(dataToSend),
-  //   undefined,
-  //   undefined,
-  //   3000,
-  //   ipAddress,
-  //   err => {
-  //     if (err) {
-  //       console.error('error sending data', err);
-  //     } else {
-  //       console.log('data sent successfully!');
-  //     }
-  //   },
-  // );
 
   client.on('message', function (msg, rinfo) {
     console.log('New Message', msg.toString(), rinfo);
   });
 
-  client.on('listening', () => {
-    client.addMembership('239.99.211.90');
-  });
-
-  client.bind(8081);
+  // client.on('listening', () => {
+  //   client.addMembership('239.99.211.90');
+  // });
 
   const startRecording = () => {
-    console.log('HERE!!!');
-    AudioRecorder.start()
-      .then(data => {
-        console.log(data.length);
-      })
-      .catch(error => {
-        console.error('Error', error);
-      });
     setIsRecording(true);
     setIsRecordingText('Recording');
+
+    AudioRecorder.start();
+
+    audioRecorderEvents.addListener('opusAudio', event => {
+      //send OPUS data to multicast group
+      client.send(
+        JSON.stringify(event.buffer),
+        undefined,
+        undefined,
+        3000,
+        ipAddress,
+        err => {
+          if (err) {
+            console.error('error sending data', err);
+          } else {
+            console.log('data sent successfully!');
+          }
+        },
+      );
+    });
   };
 
   const stopRecording = () => {
