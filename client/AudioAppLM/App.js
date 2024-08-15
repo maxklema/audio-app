@@ -13,36 +13,39 @@ const App = () => {
   const [volume, setVolume] = useState(0.3);
 
   const client = dgram.createSocket('udp4');
-  client.bind(8081);
-  const ipAddress = '10.3.196.53';
+  const ipAddress = '10.3.248.122';
+  const localPort = 8081;
 
-  client.on('message', function (msg, rinfo) {
-    console.log('New Message', msg.toString(), rinfo);
+  client.bind(localPort, err => {
+    if (err) {
+      //skip for now
+    }
+
+    // Setup listener for incoming messages
+    client.on('message', function (opusData) {
+      // console.log(JSON.parse(opusData.toString()));
+      setTimeout(() => {
+        AudioRecorder.playAudio(JSON.parse(opusData.toString()));
+      }, 3000);
+    });
   });
-
-  // client.on('listening', () => {
-  //   client.addMembership('239.99.211.90');
-  // });
 
   const startRecording = () => {
     setIsRecording(true);
     setIsRecordingText('Recording');
 
     AudioRecorder.start();
-
     audioRecorderEvents.addListener('opusAudio', event => {
-      //send OPUS data to multicast group
+      // Send OPUS data to the specified IP and port
       client.send(
         JSON.stringify(event.buffer),
         undefined,
         undefined,
-        3000,
+        3001,
         ipAddress,
         err => {
           if (err) {
-            console.error('error sending data', err);
-          } else {
-            console.log('data sent successfully!');
+            console.error('Error sending data:', err);
           }
         },
       );

@@ -113,7 +113,13 @@ class AudioRecorder: RCTEventEmitter {
   }
   
   @objc
-  func playAudio(rawData: [UInt8]) {
+  func playAudio(_ rawData: [UInt8]) {
+//    initialize()
+//    do {
+//      try audioEngine.start()
+//    } catch {
+//      
+//    }
     
     let opusFormat = AVAudioFormat(
       commonFormat: .pcmFormatFloat32,
@@ -123,7 +129,6 @@ class AudioRecorder: RCTEventEmitter {
     )
     
     do {
-      
       //decode raw OPUS audio Data
       let decoder = try Opus.Decoder(format: opusFormat!)
       let buffer = try decoder.decode(Data(rawData))
