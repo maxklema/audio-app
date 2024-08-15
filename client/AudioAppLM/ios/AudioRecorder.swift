@@ -4,10 +4,7 @@ import React
 import Opus
 
 @objc(AudioRecorder)
-class AudioRecorder: NSObject, RCTBridgeModule {
-  static func moduleName() -> String {
-    return "AudioRecorder"
-  }
+class AudioRecorder: RCTEventEmitter {
   
   private var audioEngine: AVAudioEngine!
   private var inputNode: AVAudioInputNode!
@@ -16,9 +13,18 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   private var sampleRate: Double! //kHz
   private var channels: UInt32 = 1
   
-  @objc
-  override init() {
-    super.init()
+  private var emitter : AudioRecorderEmitter?
+  
+  override static func moduleName() -> String {
+    return "AudioRecorder"
+  }
+  
+  override func supportedEvents() -> [String]! {
+    return ["opusAudio"]
+  }
+  
+  
+  private func initialize() {
     audioEngine = AVAudioEngine()
     inputNode = audioEngine.inputNode
     playerNode = AVAudioPlayerNode()
@@ -43,12 +49,12 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     
     audioEngine.attach(playerNode)
     audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: format)
-  
   }
   
-  @objc(start:rejecter:)
-  func start(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  @objc
+  func start() {
     do {
+      initialize()
       try audioEngine.start()
       
       let format = AVAudioFormat(
@@ -60,21 +66,19 @@ class AudioRecorder: NSObject, RCTBridgeModule {
       
       var data : [UInt8]!
       
+      
       // The block gets executed everytime a new audio buffer is available
       inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] (buffer, when) in
         do {
-          data = try (self?.processAudioBuffer(buffer))
-          resolve(data)
-          self?.audioEngine.stop()
+          data = try self?.processAudioBuffer(buffer)
+          self?.sendBufferToReactNative(opusAudio: data)
+          
         } catch {
           print("Error recieving audio data")
-          reject("ERROR", "Error receiving audio data", error)
         }
       }
-      
     } catch {
       print("Error starting audio engine: \(error.localizedDescription)")
-      reject("ERROR", "Error starting audio engine", error)
     }
   }
   
@@ -112,15 +116,6 @@ class AudioRecorder: NSObject, RCTBridgeModule {
   
   @objc
   func playAudio(rawData: [UInt8]) {
-        
-//    // start the audio engine
-//    if !audioEngine.isRunning {
-//      do {
-//        start(, reject: <#T##RCTPromiseRejectBlock##RCTPromiseRejectBlock##(String?, String?, (any Error)?) -> Void#>)
-//      } catch {
-//        //nothing
-//      }
-//    }
     
     let opusFormat = AVAudioFormat(
       commonFormat: .pcmFormatFloat32,
@@ -142,7 +137,10 @@ class AudioRecorder: NSObject, RCTBridgeModule {
     } catch {
       print("Error Decoding Audio Data \(error.localizedDescription)")
     }
-    
-    
+  }
+  
+  //send audio buffer back to RN
+  private func sendBufferToReactNative(opusAudio: [UInt8]) {
+    sendEvent(withName: "opusAudio", body: ["buffer": opusAudio])
   }
 }
