@@ -114,12 +114,6 @@ class AudioRecorder: RCTEventEmitter {
   
   @objc
   func playAudio(_ rawData: [UInt8]) {
-//    initialize()
-//    do {
-//      try audioEngine.start()
-//    } catch {
-//      
-//    }
     
     let opusFormat = AVAudioFormat(
       commonFormat: .pcmFormatFloat32,
@@ -136,6 +130,7 @@ class AudioRecorder: RCTEventEmitter {
       //play audio
       self.playerNode.play()
       self.playerNode.scheduleBuffer(buffer, at: nil, completionHandler: nil)
+  
       
     } catch {
       print("Error Decoding Audio Data \(error.localizedDescription)")

@@ -1,34 +1,19 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules, NativeEventEmitter} from 'react-native';
-import {Slider} from '@rneui/themed';
 import dgram from 'react-native-udp';
 
 const {AudioRecorder} = NativeModules;
 const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
 
+const localPort = 8081;
+const ipAddress = '10.3.248.122';
+
+let client;
+
 const App = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingText, setIsRecordingText] = useState('Record');
-  const [volume, setVolume] = useState(0.3);
-
-  const client = dgram.createSocket('udp4');
-  const ipAddress = '10.3.248.122';
-  const localPort = 8081;
-
-  client.bind(localPort, err => {
-    if (err) {
-      //skip for now
-    }
-
-    // Setup listener for incoming messages
-    client.on('message', function (opusData) {
-      // console.log(JSON.parse(opusData.toString()));
-      setTimeout(() => {
-        AudioRecorder.playAudio(JSON.parse(opusData.toString()));
-      }, 3000);
-    });
-  });
 
   const startRecording = () => {
     setIsRecording(true);
@@ -37,6 +22,20 @@ const App = () => {
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
       // Send OPUS data to the specified IP and port
+      if (!client) {
+        client = dgram.createSocket('udp4');
+        const localPort = 8081;
+
+        client.on('message', function (opusData) {
+          // console.log(opusData);
+          setTimeout(() => {
+            AudioRecorder.playAudio(JSON.parse(opusData.toString()));
+          }, 5000);
+        });
+
+        client.bind(localPort);
+      }
+
       client.send(
         JSON.stringify(event.buffer),
         undefined,
@@ -44,9 +43,7 @@ const App = () => {
         3001,
         ipAddress,
         err => {
-          if (err) {
-            console.error('Error sending data:', err);
-          }
+          if (err) console.error('Error sending data:', err);
         },
       );
     });
@@ -54,17 +51,16 @@ const App = () => {
 
   const stopRecording = () => {
     AudioRecorder.stop();
-    setIsRecording(false);
-    setIsRecordingText('Record');
+    if (client) {
+      client.close();
+      client = null; // Reset the client
+      setIsRecording(false);
+      setIsRecordingText('Stopped');
+    }
   };
 
   const playAudio = () => {
     //nothing
-  };
-
-  const toggleVolume = audioVolume => {
-    setVolume(audioVolume);
-    // AudioRecorder.toggleVolume(audioVolume);
   };
 
   return (
@@ -83,16 +79,6 @@ const App = () => {
       <Pressable style={styles.recording} onPress={playAudio}>
         <Text style={styles.recordText}>Play Recording</Text>
       </Pressable>
-      <Slider
-        value={volume}
-        onValueChange={value => toggleVolume(value)}
-        maximumValue={1.0}
-        minimumValue={0.0}
-        step={0.01}
-        allowTouchTrack
-        trackStyle={{height: 5, width: 200, backgroundColor: 'red'}}
-        thumbStyle={{height: 20, width: 20, backgroundColor: 'red'}}
-      />
     </View>
   );
 };
@@ -134,10 +120,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
-  },
-  slider: {
-    marginTop: 100,
-    width: 200,
   },
 });
 
