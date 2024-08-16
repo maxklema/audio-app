@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules, NativeEventEmitter} from 'react-native';
 import dgram from 'react-native-udp';
@@ -12,25 +12,25 @@ const ipAddress = '10.3.248.122';
 let client;
 
 const App = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingText, setIsRecordingText] = useState('Record');
+  const [isRecording, setIsRecording] = useState(true);
+  const [recordingText, setIsRecordingText] = useState('Mute');
+  const [isInRoom, setIsInRoom] = useState(false);
+  const [isInRoomText, setIsInRoomText] = useState('Join Room');
 
-  const startRecording = () => {
-    setIsRecording(true);
-    setIsRecordingText('Recording');
+  const joinRoom = () => {
+    setIsInRoom(true);
+    setIsInRoomText('Leave Room');
 
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
       // Send OPUS data to the specified IP and port
       if (!client) {
         client = dgram.createSocket('udp4');
-        const localPort = 8081;
 
         client.on('message', function (opusData) {
-          // console.log(opusData);
-          setTimeout(() => {
-            AudioRecorder.playAudio(JSON.parse(opusData.toString()));
-          }, 5000);
+          // setTimeout(() => {
+          AudioRecorder.playAudio(JSON.parse(opusData.toString()));
+          // }, 3000);
         });
 
         client.bind(localPort);
@@ -49,35 +49,38 @@ const App = () => {
     });
   };
 
-  const stopRecording = () => {
+  const leaveRoom = () => {
+    setIsInRoom(false);
+    setIsInRoomText('Join Room');
+
     AudioRecorder.stop();
     if (client) {
       client.close();
       client = null; // Reset the client
-      setIsRecording(false);
-      setIsRecordingText('Stopped');
     }
   };
 
-  const playAudio = () => {
-    //nothing
-  };
+  useEffect(() => {
+    isRecording ? setIsRecordingText('Mute') : setIsRecordingText('Muted');
+    AudioRecorder.toggleMute(isRecording);
+  }, [isRecording]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Audio Encoder / Decoder Demo</Text>
-      <Text>Click the button below to record audio Data</Text>
+      <Text>Click the button below to stream audio data</Text>
       <Pressable
         style={[
           !isRecording && styles.notRecording,
           isRecording && styles.recording,
         ]}
-        onPressIn={startRecording}
-        onPressOut={stopRecording}>
+        onPress={() => setIsRecording(prev => !prev)}>
         <Text style={styles.recordText}>{recordingText}</Text>
       </Pressable>
-      <Pressable style={styles.recording} onPress={playAudio}>
-        <Text style={styles.recordText}>Play Recording</Text>
+      <Pressable
+        style={isInRoom ? styles.leaveRoom : styles.joinRoom}
+        onPress={isInRoom ? leaveRoom : joinRoom}>
+        <Text style={styles.recordText}>{isInRoomText}</Text>
       </Pressable>
     </View>
   );
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   notRecording: {
-    backgroundColor: 'blue',
+    backgroundColor: 'red',
     opacity: 0.8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -101,7 +104,7 @@ const styles = StyleSheet.create({
     marginTop: '10%',
   },
   recording: {
-    backgroundColor: 'orange',
+    backgroundColor: 'grey',
     opacity: 1.0,
     alignItems: 'center',
     justifyContent: 'center',
@@ -120,6 +123,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
+  },
+  joinRoom: {
+    backgroundColor: 'blue',
+    opacity: 1.0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: '10%',
+  },
+  leaveRoom: {
+    backgroundColor: 'red',
+    opacity: 1.0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: '10%',
   },
 });
 
