@@ -1,95 +1,108 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules, NativeEventEmitter} from 'react-native';
-import {Slider} from '@rneui/themed';
 import dgram from 'react-native-udp';
+import uuid from 'react-native-uuid';
 
 const {AudioRecorder} = NativeModules;
 const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
 
+const localPort = 8081;
+const ipAddress = '10.3.248.122';
+
+let client;
+
 const App = () => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingText, setIsRecordingText] = useState('Record');
-  const [volume, setVolume] = useState(0.3);
+  const [isRecording, setIsRecording] = useState(true);
+  const [recordingText, setIsRecordingText] = useState('Mute');
+  const [isInRoom, setIsInRoom] = useState(false);
+  const [isInRoomText, setIsInRoomText] = useState('Join Room');
+  const [currentRoomUUID, setCurrentRoomUUID] = useState('');
 
-  const client = dgram.createSocket('udp4');
-  client.bind(8081);
-  const ipAddress = '10.3.196.53';
-
-  client.on('message', function (msg, rinfo) {
-    console.log('New Message', msg.toString(), rinfo);
-  });
-
-  // client.on('listening', () => {
-  //   client.addMembership('239.99.211.90');
-  // });
-
-  const startRecording = () => {
-    setIsRecording(true);
-    setIsRecordingText('Recording');
+  const joinRoom = () => {
+    setIsInRoom(true);
+    setIsInRoomText('Leave Room');
+    let roomUuid = uuid.v4();
+    setCurrentRoomUUID(roomUuid);
 
     AudioRecorder.start();
-
     audioRecorderEvents.addListener('opusAudio', event => {
-      //send OPUS data to multicast group
+      // Send OPUS data to the specified IP and port
+      // console.log(event.buffer.slice(-15));
+      if (!client) {
+        client = dgram.createSocket('udp4');
+
+        client.on('message', function (opusData) {
+          setTimeout(() => {
+            
+            // console.log(JSON.parse(opusData.toString()));
+            let compressedOpus = JSON.parse(opusData.toString()).opus;
+            let roomID = JSON.parse(opusData.toString()).roomID;
+
+            console.log(typeof roomID, typeof roomUuid);
+
+            if (roomID == roomUuid) {
+              console.log('here?');
+              AudioRecorder.playAudio(compressedOpus);
+            }
+            
+          }, 3000);
+        });
+
+        client.bind(localPort);
+      }
+
+      let audioData = {
+        opus: event.buffer,
+        roomID: roomUuid,
+      };
+
       client.send(
-        JSON.stringify(event.buffer),
+        JSON.stringify(audioData),
         undefined,
         undefined,
-        3000,
+        3001,
         ipAddress,
         err => {
-          if (err) {
-            console.error('error sending data', err);
-          } else {
-            console.log('data sent successfully!');
-          }
+          if (err) console.error('Error sending data:', err);
         },
       );
     });
   };
 
-  const stopRecording = () => {
+  const leaveRoom = () => {
+    setIsInRoom(false);
+    setIsInRoomText('Join Room');
+
     AudioRecorder.stop();
-    setIsRecording(false);
-    setIsRecordingText('Record');
+    if (client) {
+      client.close();
+      client = null; // Reset the client
+    }
   };
 
-  const playAudio = () => {
-    //nothing
-  };
-
-  const toggleVolume = audioVolume => {
-    setVolume(audioVolume);
-    // AudioRecorder.toggleVolume(audioVolume);
-  };
+  useEffect(() => {
+    isRecording ? setIsRecordingText('Mute') : setIsRecordingText('Unmute');
+    AudioRecorder.toggleMute(isRecording);
+  }, [isRecording]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.welcomeText}>Audio Encoder / Decoder Demo</Text>
-      <Text>Click the button below to record audio Data</Text>
+      <Text>Click the button below to stream audio data</Text>
       <Pressable
         style={[
           !isRecording && styles.notRecording,
           isRecording && styles.recording,
         ]}
-        onPressIn={startRecording}
-        onPressOut={stopRecording}>
+        onPress={() => setIsRecording(prev => !prev)}>
         <Text style={styles.recordText}>{recordingText}</Text>
       </Pressable>
-      <Pressable style={styles.recording} onPress={playAudio}>
-        <Text style={styles.recordText}>Play Recording</Text>
+      <Pressable
+        style={isInRoom ? styles.leaveRoom : styles.joinRoom}
+        onPress={isInRoom ? leaveRoom : joinRoom}>
+        <Text style={styles.recordText}>{isInRoomText}</Text>
       </Pressable>
-      <Slider
-        value={volume}
-        onValueChange={value => toggleVolume(value)}
-        maximumValue={1.0}
-        minimumValue={0.0}
-        step={0.01}
-        allowTouchTrack
-        trackStyle={{height: 5, width: 200, backgroundColor: 'red'}}
-        thumbStyle={{height: 20, width: 20, backgroundColor: 'red'}}
-      />
     </View>
   );
 };
@@ -102,7 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   notRecording: {
-    backgroundColor: 'blue',
+    backgroundColor: 'red',
     opacity: 0.8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -112,7 +125,7 @@ const styles = StyleSheet.create({
     marginTop: '10%',
   },
   recording: {
-    backgroundColor: 'orange',
+    backgroundColor: 'grey',
     opacity: 1.0,
     alignItems: 'center',
     justifyContent: 'center',
@@ -132,9 +145,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     margin: 10,
   },
-  slider: {
-    marginTop: 100,
-    width: 200,
+  joinRoom: {
+    backgroundColor: 'blue',
+    opacity: 1.0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: '10%',
+  },
+  leaveRoom: {
+    backgroundColor: 'red',
+    opacity: 1.0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: '10%',
   },
 });
 
