@@ -8,7 +8,7 @@ const {AudioRecorder} = NativeModules;
 const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
 
 const localPort = 8081;
-const ipAddress = '10.3.248.122';
+const ipAddress = '10.3.196.53';
 
 let client;
 

@@ -43,7 +43,7 @@ const tcpServer: net.Server = net.createServer((socket: net.Socket) => {
   HandleTCP(socket, allSockets, rooms, userRooms, users, general, multicastIPs); // set up handlers for each socket
 });
 
-tcpServer.listen(3001, '0.0.0.0', () => {
+tcpServer.listen(3000, '0.0.0.0', () => {
   console.log('opened TCP server on', tcpServer.address());
 }); 
 
