@@ -3,7 +3,7 @@ import { RoomContent } from './main';
 import generateIP from "./ipv4";
 
 interface Message {
-  type: 'leaveRoom' | 'joinRoom' | 'createRoom' | 'joinCall' | 'leaveCall';
+  type: 'leaveRoom' | 'joinRoom' | 'createRoom' | 'joinCall' | 'leaveCall' | 'deleteRoom';
   user: string;
   room?: string; // don't need room for joinCall
 }
@@ -37,6 +37,9 @@ export default function HandleTCP(socket: net.Socket, allSockets: net.Socket[], 
         LeaveRoom(message, senderIP, userRooms, users, general);
         BroadcastRooms(allSockets, userRooms);
         break;
+      case 'deleteRoom':
+        DeleteRoom(message, rooms, userRooms, users, general, multicastIPs);
+        BroadcastRooms(allSockets, userRooms);
     } // Note: will need to incorporate some success/failure responses to send to User.
   })
 }
@@ -89,11 +92,37 @@ function JoinRoom(message: Message, userIP: string, userRooms: RoomContent, user
 function LeaveRoom(message: Message, userIP: string, userRooms: RoomContent, users: Map<string, string>, general: Set<string>) {
   if (message.room) {
     userRooms[message.room] = userRooms[message.room].filter(user => user !== message.user);
+    userRooms["general"].push(message.user);
     if (message.room === "general") { // leaving general to join another group
       general.delete(userIP);
     } else { // rejoin general if leaving a multicast group
       users.set(userIP, "general");
       general.add(userIP);
+    }
+  } else {
+    console.log("No room provided in joinRoom request.")
+  }
+}
+
+function DeleteRoom(message: Message, rooms: Map<string, string>, userRooms: RoomContent, users: Map<string, string>, general: Set<string>, multicastIPs: Set<string>) {
+  if (message.room) {
+    let roomIP = rooms.get(message.room);
+    if (roomIP) multicastIPs.delete(roomIP); // delete multicast IP
+    rooms.delete(message.room); // delete room
+    
+    for (const [userIP, group] of users) {   // user IP and group name
+      if (group === message.room) { // if user in group to be removed
+        users.set(userIP, "general"); // change user to general
+        general.add(userIP); // add user IP to general
+      }
+    } 
+
+    for (const [room, users] of Object.entries(userRooms)) {
+      if (room === message.room) { // if correct room to be deleted
+        userRooms["general"] = userRooms["general"].concat(users); // add users to general
+        delete userRooms[room]; // delete room
+        break; // Exit the loop after making changes
+      }
     }
   } else {
     console.log("No room provided in joinRoom request.")
