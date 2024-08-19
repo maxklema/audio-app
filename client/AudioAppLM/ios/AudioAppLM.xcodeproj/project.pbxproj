@@ -13,6 +13,8 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		244118ED2C666FC000D6F681 /* RCTCalendarModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 244118EC2C666FC000D6F681 /* RCTCalendarModule.m */; };
+		248D17D72C6C0950005E3620 /* Copus in Frameworks */ = {isa = PBXBuildFile; productRef = 248D17D62C6C0950005E3620 /* Copus */; };
+		248D17D92C6C0950005E3620 /* Opus in Frameworks */ = {isa = PBXBuildFile; productRef = 248D17D82C6C0950005E3620 /* Opus */; };
 		24D5D5EC2C66A376001A6566 /* AudioRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 24D5D5EB2C66A376001A6566 /* AudioRecorder.m */; };
 		24D5D5EE2C66A395001A6566 /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D5D5ED2C66A395001A6566 /* AudioRecorder.swift */; };
 		48F774D642EFB178121FD59A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6561BA15041D571A363325EB /* PrivacyInfo.xcprivacy */; };
@@ -71,6 +73,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-AudioAppLM.a in Frameworks */,
+				248D17D72C6C0950005E3620 /* Copus in Frameworks */,
+				248D17D92C6C0950005E3620 /* Opus in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +219,10 @@
 			dependencies = (
 			);
 			name = AudioAppLM;
+			packageProductDependencies = (
+				248D17D62C6C0950005E3620 /* Copus */,
+				248D17D82C6C0950005E3620 /* Opus */,
+			);
 			productName = AudioAppLM;
 			productReference = 13B07F961A680F5B00A75B9A /* AudioAppLM.app */;
 			productType = "com.apple.product-type.application";
@@ -245,6 +253,9 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				248D17D52C6C0944005E3620 /* XCRemoteSwiftPackageReference "swift-opus" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -781,6 +792,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		248D17D52C6C0944005E3620 /* XCRemoteSwiftPackageReference "swift-opus" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/alta/swift-opus";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		248D17D62C6C0950005E3620 /* Copus */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 248D17D52C6C0944005E3620 /* XCRemoteSwiftPackageReference "swift-opus" */;
+			productName = Copus;
+		};
+		248D17D82C6C0950005E3620 /* Opus */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 248D17D52C6C0944005E3620 /* XCRemoteSwiftPackageReference "swift-opus" */;
+			productName = Opus;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

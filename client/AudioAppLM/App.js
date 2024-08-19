@@ -1,26 +1,67 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
-import {NativeModules} from 'react-native';
+import {NativeModules, NativeEventEmitter} from 'react-native';
+import {Slider} from '@rneui/themed';
+import dgram from 'react-native-udp';
+
 const {AudioRecorder} = NativeModules;
+const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
 
 const App = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingText, setIsRecordingText] = useState('Record');
+  const [volume, setVolume] = useState(0.3);
+
+  const client = dgram.createSocket('udp4');
+  client.bind(8081);
+  const ipAddress = '10.3.196.53';
+
+  client.on('message', function (msg, rinfo) {
+    console.log('New Message', msg.toString(), rinfo);
+  });
+
+  // client.on('listening', () => {
+  //   client.addMembership('239.99.211.90');
+  // });
 
   const startRecording = () => {
-    AudioRecorder.startRecording();
     setIsRecording(true);
     setIsRecordingText('Recording');
+
+    AudioRecorder.start();
+
+    audioRecorderEvents.addListener('opusAudio', event => {
+      //send OPUS data to multicast group
+      client.send(
+        JSON.stringify(event.buffer),
+        undefined,
+        undefined,
+        3000,
+        ipAddress,
+        err => {
+          if (err) {
+            console.error('error sending data', err);
+          } else {
+            console.log('data sent successfully!');
+          }
+        },
+      );
+    });
   };
 
   const stopRecording = () => {
-    AudioRecorder.stopRecording();
+    AudioRecorder.stop();
     setIsRecording(false);
     setIsRecordingText('Record');
   };
 
   const playAudio = () => {
-    AudioRecorder.playAudio();
+    //nothing
+  };
+
+  const toggleVolume = audioVolume => {
+    setVolume(audioVolume);
+    // AudioRecorder.toggleVolume(audioVolume);
   };
 
   return (
@@ -39,6 +80,16 @@ const App = () => {
       <Pressable style={styles.recording} onPress={playAudio}>
         <Text style={styles.recordText}>Play Recording</Text>
       </Pressable>
+      <Slider
+        value={volume}
+        onValueChange={value => toggleVolume(value)}
+        maximumValue={1.0}
+        minimumValue={0.0}
+        step={0.01}
+        allowTouchTrack
+        trackStyle={{height: 5, width: 200, backgroundColor: 'red'}}
+        thumbStyle={{height: 20, width: 20, backgroundColor: 'red'}}
+      />
     </View>
   );
 };
@@ -48,7 +99,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: 'white',
   },
   notRecording: {
     backgroundColor: 'blue',
@@ -80,6 +131,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
+  },
+  slider: {
+    marginTop: 100,
+    width: 200,
   },
 });
 
