@@ -12,9 +12,13 @@
   "dependencies": {
     "@miblanchard/react-native-slider": "^2.6.0",
     "@rneui/themed": "^4.0.0-rc.8",
+    "import": "^0.0.6",
     "react": "18.2.0",
     "react-native": "^0.74.5",
-    "react-native-udp": "^4.1.7"
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-udp": "^4.1.7",
+    "react-native-uuid": "^2.0.2",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

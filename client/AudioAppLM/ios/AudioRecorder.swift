@@ -10,7 +10,7 @@ class AudioRecorder: RCTEventEmitter {
   private var inputNode: AVAudioInputNode!
   private var playerNode: AVAudioPlayerNode!
     
-  private var sampleRate: Double = 0.0 //kHz
+  private var sampleRate: Double! //kHz
   private var channels: UInt32 = 1
   private var muted: Bool = false
   
@@ -22,23 +22,30 @@ class AudioRecorder: RCTEventEmitter {
     return ["opusAudio"]
   }
   
+  
   private func initialize() {
-    audioEngine = AVAudioEngine()
-    inputNode = audioEngine.inputNode
-    playerNode = AVAudioPlayerNode()
+    if (audioEngine == nil) {
+      audioEngine = AVAudioEngine()
+    }
+    
+    if inputNode == nil {
+      inputNode = audioEngine.inputNode
+    }
+    
+    if playerNode == nil {
+      playerNode = AVAudioPlayerNode()
+    }
+//    audioEngine = AVAudioEngine()
+//    inputNode = audioEngine.inputNode
+//    playerNode = AVAudioPlayerNode()
+    
     
     let audioSession = AVAudioSession.sharedInstance()
-    
     do {
-      if (muted){
-        try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
-      } else {
-        try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
-        sampleRate = audioSession.sampleRate
-      }
-     
+      try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
       try audioSession.setActive(true)
-    
+      
+      sampleRate = audioSession.sampleRate
       
     } catch {
       print("Failed to set up AVAudioSession: \(error.localizedDescription)")
@@ -55,14 +62,37 @@ class AudioRecorder: RCTEventEmitter {
     audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: format)
     
     toggleMute(!muted)
+    
+    if inputNode.inputFormat(forBus: 0).channelCount > 0 {
+        audioEngine.inputNode.removeTap(onBus: 0)
+    }
+          
+    var data : [UInt8]!
+    
+    // The block gets executed everytime a new audio buffer is available
+    inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] (buffer, when) in
+      do {
+        if (!self!.muted){
+          data = try self?.processAudioBuffer(buffer)
+          self?.sendBufferToReactNative(opusAudio: data)
+        }
+      } catch {
+        print("Error recieving audio data")
+      }
+    }
   }
   
   @objc
   func start() {
     do {
+
+      if audioEngine != nil && audioEngine.isRunning {
+        stop()
+      }
+      
       initialize()
       try audioEngine.start()
-    
+
     } catch {
       print("Error starting audio engine: \(error.localizedDescription)")
     }
@@ -70,8 +100,31 @@ class AudioRecorder: RCTEventEmitter {
   
   @objc
   func stop() {
-    playerNode.stop()
+    if playerNode != nil  {
+      playerNode.stop()
+    }
+    
+    //disconnect audio nodes
+    if inputNode != nil {
+      inputNode.removeTap(onBus: 0)
+      audioEngine.disconnectNodeInput(inputNode)
+      audioEngine.disconnectNodeOutput(inputNode)
+    }
+    
+    if playerNode != nil {
+      audioEngine.disconnectNodeInput(playerNode)
+      audioEngine.disconnectNodeOutput(playerNode)
+    }
+    
+    audioEngine.detach(playerNode)
+  
     audioEngine.stop()
+    audioEngine.reset()
+  
+    
+    audioEngine = nil
+    inputNode = nil
+    playerNode = nil
   }
 
   private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) throws -> [UInt8] {
@@ -116,11 +169,11 @@ class AudioRecorder: RCTEventEmitter {
       let buffer = try decoder.decode(Data(rawData))
       
       //play audio
-      self.playerNode.scheduleBuffer(buffer, at: nil, completionHandler: nil)
-      if (audioEngine.isRunning){
+      if (playerNode != nil || audioEngine != nil) {
+        self.playerNode.scheduleBuffer(buffer, at: nil, completionHandler: nil)
         self.playerNode.play()
       }
-      
+     
     } catch {
       print("Error Decoding Audio Data \(error.localizedDescription)")
     }
@@ -129,54 +182,6 @@ class AudioRecorder: RCTEventEmitter {
   @objc
   func toggleMute(_ setMute: Bool){
     self.muted = !setMute
-    let audioSession = AVAudioSession.sharedInstance()
-    
-    if ((audioEngine) != nil && muted){
-      audioEngine.inputNode.removeTap(onBus: 0)
-    
-      do {
-        try audioSession.setCategory(.playback, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
-        try audioSession.setActive(true)
-        
-      } catch {
-        print("Failed to set up AVAudioSession: \(error.localizedDescription)")
-      }
-     
-      
-    } else if ((audioEngine) != nil && !muted) {
-      
-      do {
-        try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
-        try audioSession.setActive(true)
-        
-        sampleRate = audioSession.sampleRate
-        
-      } catch {
-        print("Failed to set up AVAudioSession: \(error.localizedDescription)")
-      }
-      
-      let format = AVAudioFormat(
-        commonFormat: .pcmFormatFloat32,
-        sampleRate: sampleRate,
-        channels: channels,
-        interleaved: false
-      )
-      
-      var data : [UInt8]!
-      
-      // The block gets executed everytime a new audio buffer is available
-      inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] (buffer, when) in
-        do {
-          if (!self!.muted){
-            data = try self?.processAudioBuffer(buffer)
-            self?.sendBufferToReactNative(opusAudio: data)
-          }
-          
-        } catch {
-          print("Error recieving audio data")
-        }
-      }
-    }
   }
   
   //send audio buffer back to RN

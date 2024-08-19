@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules, NativeEventEmitter} from 'react-native';
 import dgram from 'react-native-udp';
+import uuid from 'react-native-uuid';
 
 const {AudioRecorder} = NativeModules;
 const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
@@ -16,28 +17,48 @@ const App = () => {
   const [recordingText, setIsRecordingText] = useState('Mute');
   const [isInRoom, setIsInRoom] = useState(false);
   const [isInRoomText, setIsInRoomText] = useState('Join Room');
+  const [currentRoomUUID, setCurrentRoomUUID] = useState('');
 
   const joinRoom = () => {
     setIsInRoom(true);
     setIsInRoomText('Leave Room');
+    let roomUuid = uuid.v4();
+    setCurrentRoomUUID(roomUuid);
 
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
       // Send OPUS data to the specified IP and port
+      // console.log(event.buffer.slice(-15));
       if (!client) {
         client = dgram.createSocket('udp4');
 
         client.on('message', function (opusData) {
-          // setTimeout(() => {
-          AudioRecorder.playAudio(JSON.parse(opusData.toString()));
-          // }, 3000);
+          setTimeout(() => {
+            
+            // console.log(JSON.parse(opusData.toString()));
+            let compressedOpus = JSON.parse(opusData.toString()).opus;
+            let roomID = JSON.parse(opusData.toString()).roomID;
+
+            console.log(typeof roomID, typeof roomUuid);
+
+            if (roomID == roomUuid) {
+              console.log('here?');
+              AudioRecorder.playAudio(compressedOpus);
+            }
+            
+          }, 3000);
         });
 
         client.bind(localPort);
       }
 
+      let audioData = {
+        opus: event.buffer,
+        roomID: roomUuid,
+      };
+
       client.send(
-        JSON.stringify(event.buffer),
+        JSON.stringify(audioData),
         undefined,
         undefined,
         3001,
@@ -61,7 +82,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    isRecording ? setIsRecordingText('Mute') : setIsRecordingText('Muted');
+    isRecording ? setIsRecordingText('Mute') : setIsRecordingText('Unmute');
     AudioRecorder.toggleMute(isRecording);
   }, [isRecording]);
 
