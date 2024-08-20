@@ -13,6 +13,16 @@ const ipAddress = '10.3.196.53';
 let udpSocket;
 let tcpSocket;
 
+const options = {
+  port: 3000,
+  localport: 5000,
+  host: ipAddress,
+}
+
+tcpSocket = TcpSocket.createConnection(options, () => {
+  tcpSocket.write(JSON.stringify({type: "Office"}));
+});
+
 const App = () => {
   const [isRecording, setIsRecording] = useState(true);
   const [recordingText, setIsRecordingText] = useState('Mute');
@@ -34,16 +44,10 @@ const App = () => {
         udpSocket.bind(localPort);
       }
 
-      const options = {
-        port: 3000,
-        localport: 5000,
-        host: ipAddress,
-      }
+      tcpSocket.write(JSON.stringify({"type": room}));
+    
 
-      tcpSocket = TcpSocket.createConnection(options, () => {
-        tcpSocket.write(JSON.stringify({"type": room}));
-      });
-
+   
       let audioData = {
         opus: event.buffer,
       };
