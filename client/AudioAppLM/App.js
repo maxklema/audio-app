@@ -2,48 +2,57 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {NativeModules, NativeEventEmitter} from 'react-native';
 import dgram from 'react-native-udp';
+import TcpSocket from 'react-native-tcp-socket';
 
 const {AudioRecorder} = NativeModules;
 const audioRecorderEvents = new NativeEventEmitter(AudioRecorder);
 
 const localPort = 8081;
-const ipAddress = '10.3.248.122';
+const ipAddress = '10.3.196.53';
 
-let client;
+let udpSocket;
+let tcpSocket;
 
 const App = () => {
   const [isRecording, setIsRecording] = useState(true);
   const [recordingText, setIsRecordingText] = useState('Mute');
-  const [activeRoom, setActiveRoom] = useState('');
+  const [activeRoom, setActiveRoom] = useState('Office');
 
   const joinRoom = room => {
     setActiveRoom(room);
 
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
-      // Send OPUS data to the specified IP and port
-      // console.log(event.buffer.slice(-15));
-      if (!client) {
-        client = dgram.createSocket('udp4');
+      
+      if (!udpSocket) {
+        udpSocket = dgram.createSocket('udp4');
 
-        client.on('message', function (opusData) {
-          // console.log(JSON.parse(opusData.toString()));
+        udpSocket.on('message', function (opusData) {
           let compressedOpus = JSON.parse(opusData.toString()).opus;
           AudioRecorder.playAudio(compressedOpus);
         });
-
-        client.bind(localPort);
+        udpSocket.bind(localPort);
       }
+
+      const options = {
+        port: 3000,
+        localport: 5000,
+        host: ipAddress,
+      }
+
+      tcpSocket = TcpSocket.createConnection(options, () => {
+        tcpSocket.write(JSON.stringify({"type": room}));
+      });
 
       let audioData = {
         opus: event.buffer,
       };
 
-      client.send(
+      udpSocket.send(
         JSON.stringify(audioData),
         undefined,
         undefined,
-        3000,
+        3001,
         ipAddress,
         err => {
           if (err) console.error('Error sending data:', err);
@@ -56,9 +65,9 @@ const App = () => {
     setActiveRoom('');
 
     AudioRecorder.stop();
-    if (client) {
-      client.close();
-      client = null; // Reset the client
+    if (udpSocket) {
+      udpSocket.close();
+      udpSocket = null; // Reset the udpSocket
     }
 
     audioRecorderEvents.removeAllListeners('opusAudio');
