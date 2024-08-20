@@ -17,10 +17,10 @@ const options = {
   port: 3000,
   localport: 5000,
   host: ipAddress,
-}
+};
 
 tcpSocket = TcpSocket.createConnection(options, () => {
-  tcpSocket.write(JSON.stringify({type: "Office"}));
+  tcpSocket.write(JSON.stringify({type: 'Office'}));
 });
 
 const App = () => {
@@ -31,11 +31,10 @@ const App = () => {
   const joinRoom = room => {
     setActiveRoom(room);
 
-    tcpSocket.write(JSON.stringify({"type": room}));
+    tcpSocket.write(JSON.stringify({type: room}));
 
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
-      
       if (!udpSocket) {
         udpSocket = dgram.createSocket('udp4');
 
@@ -46,10 +45,6 @@ const App = () => {
         udpSocket.bind(localPort);
       }
 
-
-    
-
-   
       let audioData = {
         opus: event.buffer,
       };
