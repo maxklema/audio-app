@@ -68,10 +68,11 @@ server.on('message', (message: Buffer, rinfo: dgram.RemoteInfo) => {
     
     if (multicastIP === '239.1.1.1') {
       server.send(message, 8081, "239.2.2.2");
-      console.log("sent from Conference to Office")
+      
+      console.log("sent from Office to Conference")
     } else {
       server.send(message, 8081, "239.1.1.1");
-      console.log("sent from Office to Conference")
+      console.log("sent from Conference to Office")
     }
   
 });

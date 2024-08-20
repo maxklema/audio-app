@@ -32,6 +32,8 @@ udpSocket.on('message', function (opusData) {
   AudioRecorder.playAudio(compressedOpus);
 });
 
+let group = false;
+
 const App = () => {
   const [isRecording, setIsRecording] = useState(true);
   const [recordingText, setIsRecordingText] = useState('Mute');
@@ -40,10 +42,14 @@ const App = () => {
   const joinRoom = room => {
     setActiveRoom(room);
 
+    if (group === true) audioRecorderEvents.removeAllListeners('opusAudio');
+
     tcpSocket.write(JSON.stringify({type: room}));
 
-    udpSocket.dropMembership(room === "Conference" ? "239.1.1.1" : "239.2.2.2")
+  
+    if (group === true) udpSocket.dropMembership(room === "Conference" ? "239.1.1.1" : "239.2.2.2")
     udpSocket.addMembership(room === "Office" ? "239.1.1.1" : "239.2.2.2")
+    group = true;
     
 
     AudioRecorder.start();
