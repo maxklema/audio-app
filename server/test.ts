@@ -8,8 +8,8 @@ interface Message {
   type: "Office" | "Conference"
 }
 
-const users: Map<string, string> = new Map<string, string>();
-const groups: Map<string, string> = new Map<string, string>();
+let users: Map<string, string> = new Map<string, string>();
+let groups: Map<string, string> = new Map<string, string>();
 
 groups.set("Office", "239.1.1.1");
 groups.set("Conference", "239.2.2.2");
@@ -22,7 +22,8 @@ const tcpServer: net.Server = net.createServer(socket => {
     return
   }
   const clientIp: string = socket.remoteAddress;
-  users.set(clientIp, "Office"); // defualt to Office
+  users.set(clientIp, "Office"); // default to Office
+  console.log(users)
   
 
   socket.on('data', (data: string) => {
@@ -38,27 +39,42 @@ const tcpServer: net.Server = net.createServer(socket => {
 })
 
 // Start the server on port 3000
-tcpServer.listen(3000, () => {
+tcpServer.listen(3000, '0.0.0.0', () => {
   console.log('TCP server listening on port 3000');
 });
 
 
 
 server.on('message', (message: Buffer, rinfo: dgram.RemoteInfo) => {
-  if (!rinfo.address) return;
-  let client: string = rinfo.address;
 
-  let userGroup: string | undefined = users.get(client);
+  let client = rinfo.address;
+  console.log(client)
 
-  if (!userGroup) return;
-  let multicastIP: string | undefined = groups.get(userGroup);
-  if (!multicastIP) return;
+  let userGroup = users.get(client);
+  console.log(users)
+  let multicastIP: string | undefined;
 
-  for (const groupIP in groups.values()) {
-    if (groupIP !== multicastIP) {
-      server.send(message, 8081, groupIP);
-    }
+  if (userGroup !== undefined) {
+    multicastIP = groups.get(userGroup);
+
+
   }
+
+  
+
+  
+  
+
+  Array.from(groups.values()).forEach(groupIP =>  {
+
+    // console.log(groupIP, multicastIP)
+    
+    if (groupIP !== multicastIP) {
+      console.log(groupIP)
+      server.send(message, 8081, groupIP);
+      
+    }
+  })
 });
 
   

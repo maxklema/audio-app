@@ -32,6 +32,7 @@ const App = () => {
     setActiveRoom(room);
 
     tcpSocket.write(JSON.stringify({type: room}));
+    
 
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
@@ -43,6 +44,9 @@ const App = () => {
           AudioRecorder.playAudio(compressedOpus);
         });
         udpSocket.bind(localPort);
+        udpSocket.dropMembership()
+
+        udpSocket.addMembership(room === "Office" ? "239.1.1.1" : "239.2.2.2")
       }
 
       let audioData = {
