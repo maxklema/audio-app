@@ -42,11 +42,7 @@ class AudioRecorder: RCTEventEmitter {
     
     let audioSession = AVAudioSession.sharedInstance()
     do {
-<<<<<<< HEAD
       try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
-=======
-      try audioSession.setCategory(.playAndRecord, mode: .videoChat, options: [.defaultToSpeaker, .allowBluetooth])
->>>>>>> 3b7355e (client changes and such)
       try audioSession.setActive(true)
       
       sampleRate = audioSession.sampleRate
@@ -177,7 +173,7 @@ class AudioRecorder: RCTEventEmitter {
         self.playerNode.scheduleBuffer(buffer, at: nil, completionHandler: nil)
         self.playerNode.play()
       }
-     
+
     } catch {
       print("Error Decoding Audio Data \(error.localizedDescription)")
     }
