@@ -43,10 +43,11 @@ const App = () => {
           let compressedOpus = JSON.parse(opusData.toString()).opus;
           AudioRecorder.playAudio(compressedOpus);
         });
-        udpSocket.bind(localPort);
-        udpSocket.dropMembership()
-
-        udpSocket.addMembership(room === "Office" ? "239.1.1.1" : "239.2.2.2")
+        udpSocket.bind(localPort, () => {
+          udpSocket.dropMembership()
+          udpSocket.addMembership(room === "Office" ? "239.1.1.1" : "239.2.2.2")
+        });
+       
       }
 
       let audioData = {
