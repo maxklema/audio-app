@@ -33,20 +33,15 @@ const App = () => {
         client = dgram.createSocket('udp4');
 
         client.on('message', function (opusData) {
-          setTimeout(() => {
+
             
             // console.log(JSON.parse(opusData.toString()));
             let compressedOpus = JSON.parse(opusData.toString()).opus;
             let roomID = JSON.parse(opusData.toString()).roomID;
-
-            console.log(typeof roomID, typeof roomUuid);
-
-            if (roomID == roomUuid) {
-              console.log('here?');
-              AudioRecorder.playAudio(compressedOpus);
-            }
+            AudioRecorder.playAudio(compressedOpus);
+           
             
-          }, 3000);
+          
         });
 
         client.bind(localPort);
@@ -79,6 +74,8 @@ const App = () => {
       client.close();
       client = null; // Reset the client
     }
+
+    audioRecorderEvents.removeAllListeners('opusAudio');
   };
 
   useEffect(() => {

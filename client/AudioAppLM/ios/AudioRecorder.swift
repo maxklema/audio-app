@@ -42,7 +42,7 @@ class AudioRecorder: RCTEventEmitter {
     
     let audioSession = AVAudioSession.sharedInstance()
     do {
-      try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+      try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
       try audioSession.setActive(true)
       
       sampleRate = audioSession.sampleRate
