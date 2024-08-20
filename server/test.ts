@@ -48,11 +48,13 @@ tcpServer.listen(3000, '0.0.0.0', () => {
 server.on('message', (message: Buffer, rinfo: dgram.RemoteInfo) => {
 
   let client = rinfo.address;
-  console.log(client)
+
 
   let userGroup = users.get(client);
-  console.log(users)
+
   let multicastIP: string | undefined;
+
+
 
   if (userGroup !== undefined) {
     multicastIP = groups.get(userGroup);
@@ -63,18 +65,15 @@ server.on('message', (message: Buffer, rinfo: dgram.RemoteInfo) => {
   
 
   
-  
-
-  Array.from(groups.values()).forEach(groupIP =>  {
-
-    // console.log(groupIP, multicastIP)
     
-    if (groupIP !== multicastIP) {
-      console.log(groupIP)
-      server.send(message, 8081, groupIP);
-      
+    if (multicastIP === '239.1.1.1') {
+      server.send(message, 8081, "239.2.2.2");
+      console.log("sent from Conference to Office")
+    } else {
+      server.send(message, 8081, "239.1.1.1");
+      console.log("sent from Office to Conference")
     }
-  })
+  
 });
 
   

@@ -23,6 +23,15 @@ tcpSocket = TcpSocket.createConnection(options, () => {
   tcpSocket.write(JSON.stringify({type: 'Office'}));
 });
 
+udpSocket = dgram.createSocket('udp4');
+
+udpSocket.bind(localPort)
+
+udpSocket.on('message', function (opusData) {
+  let compressedOpus = JSON.parse(opusData.toString()).opus;
+  AudioRecorder.playAudio(compressedOpus);
+});
+
 const App = () => {
   const [isRecording, setIsRecording] = useState(true);
   const [recordingText, setIsRecordingText] = useState('Mute');
@@ -32,24 +41,14 @@ const App = () => {
     setActiveRoom(room);
 
     tcpSocket.write(JSON.stringify({type: room}));
+
+    udpSocket.dropMembership(room === "Conference" ? "239.1.1.1" : "239.2.2.2")
+    udpSocket.addMembership(room === "Office" ? "239.1.1.1" : "239.2.2.2")
     
 
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
-      if (!udpSocket) {
-        udpSocket = dgram.createSocket('udp4');
-
-        udpSocket.on('message', function (opusData) {
-          let compressedOpus = JSON.parse(opusData.toString()).opus;
-          AudioRecorder.playAudio(compressedOpus);
-        });
-        udpSocket.bind(localPort, () => {
-          udpSocket.dropMembership()
-          udpSocket.addMembership(room === "Office" ? "239.1.1.1" : "239.2.2.2")
-        });
-       
-      }
-
+    
       let audioData = {
         opus: event.buffer,
       };
