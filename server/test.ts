@@ -26,7 +26,9 @@ const tcpServer: net.Server = net.createServer(socket => {
   
 
   socket.on('data', (data: string) => {
+    
     const message: Message = JSON.parse(data);
+    console.log(message)
     users.set(clientIp, message.type);
     
   });
@@ -37,7 +39,7 @@ const tcpServer: net.Server = net.createServer(socket => {
 
 // Start the server on port 3000
 tcpServer.listen(3000, () => {
-  console.log('TCP server listening on port 8080');
+  console.log('TCP server listening on port 3000');
 });
 
 

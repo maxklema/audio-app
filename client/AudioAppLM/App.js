@@ -31,6 +31,8 @@ const App = () => {
   const joinRoom = room => {
     setActiveRoom(room);
 
+    tcpSocket.write(JSON.stringify({"type": room}));
+
     AudioRecorder.start();
     audioRecorderEvents.addListener('opusAudio', event => {
       
@@ -44,7 +46,7 @@ const App = () => {
         udpSocket.bind(localPort);
       }
 
-      tcpSocket.write(JSON.stringify({"type": room}));
+
     
 
    
