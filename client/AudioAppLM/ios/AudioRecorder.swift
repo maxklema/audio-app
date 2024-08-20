@@ -70,7 +70,7 @@ class AudioRecorder: RCTEventEmitter {
     var data : [UInt8]!
     
     // The block gets executed everytime a new audio buffer is available
-    inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] (buffer, when) in
+    inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] (buffer, when) in
       do {
         if (!self!.muted){
           data = try self?.processAudioBuffer(buffer)
